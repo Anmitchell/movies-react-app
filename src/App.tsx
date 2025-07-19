@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Search from './components/Search';
+import Spinner from './components/Spinner';
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const API_KEY = import.meta.env.VITE_MOVIE_API_KEY;
@@ -37,7 +38,7 @@ const App = () => {
 
       const data = await response.json();
     
-      if (data.results.length === false) {
+      if (data.response === 'False') {
         setErrorMessage(data.Error || 'Failed to fetch movies');
         setMovies([]);
         return;
@@ -68,9 +69,9 @@ const App = () => {
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
         <section className="movies">
-          <h2>All Movies</h2>
+          <h2 className="mt-[40px]">All Movies</h2>
           {loading ? (
-            <p className="text-white">Loading...</p>
+            <Spinner />
           ) : errorMessage ? (
             <p className="text-red-500">{errorMessage}</p>
           ) : (

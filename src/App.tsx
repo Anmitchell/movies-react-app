@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Search from './components/Search';
 import Spinner from './components/Spinner';
 
@@ -16,45 +16,75 @@ const API_OPTIONS = {
 interface Movie {
   id: number;
   title: string;
+  poster_path?: string;
+  overview?: string;
+  release_date?: string;
 }
 
 const App = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchMovies = async () => {
+  const fetchMovies = async (): Promise<void> => {
     setLoading(true);
     setErrorMessage('');
 
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     try {
-      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&api_key=${API_KEY}`;
-      const response = await fetch(endpoint, API_OPTIONS);
+      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      
+      const response = await fetch(endpoint, {
+        ...API_OPTIONS,
+        signal: controller.signal
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch movies');
+        if (response.status === 401) {
+          throw new Error('API key is invalid or missing');
+        } else if (response.status === 429) {
+          throw new Error('Too many requests. Please try again later.');
+        } else if (response.status >= 500) {
+          throw new Error('Server error. Please try again later.');
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
       }
 
       const data = await response.json();
-    
-      if (data.response === 'False') {
-        setErrorMessage(data.Error || 'Failed to fetch movies');
+      
+      if (data.results) {
+        setMovies(data.results);
+      } else {
+        setErrorMessage('No movies found');
         setMovies([]);
-        return;
       }
-
-      setMovies(data.results);
     } catch (error) {
       console.error('Error fetching movies:', error);
-      setErrorMessage('Failed to fetch movies. Please try again later.');
+      
+      // Handle different types of network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setErrorMessage('Network error. Please check your internet connection.');
+      } else if (error instanceof DOMException && error.name === 'AbortError') {
+        setErrorMessage('Request timed out. Please try again.');
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Failed to fetch movies. Please try again later.');
+      }
+      
+      setMovies([]);
     } finally {
+      clearTimeout(timeoutId); // ← Now always runs
       setLoading(false);
     }
   };
 
-  
-  useEffect( () => {
+  useEffect(() => {
     fetchMovies();
   }, []);
 
@@ -77,7 +107,7 @@ const App = () => {
           ) : (
             <ul>
               {movies.map((movie) => (
-                <p key={movie.id} className="text-white">{movie.title}</p>
+                <li key={movie.id} className="text-white">{movie.title}</li>
               ))}
             </ul>
           )}

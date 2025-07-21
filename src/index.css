@@ -3,6 +3,8 @@
 
 @import 'tailwindcss';
 
+/* stylelint-disable at-rule-no-unknown */
+
 @theme {
   --color-primary: #030014;
 

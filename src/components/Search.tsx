@@ -7,15 +7,15 @@ interface SearchProps {
 
 const Search = ({ searchTerm, setSearchTerm }: SearchProps) => {
   return (
-    <div className='search'>
-      <div className='text-white text-3xl'>
+    <div className="search">
+      <div className="text-white text-3xl">
         <img src="/search.svg" alt="Search" />
 
         <input
           type="text"
-          placeholder='Search through thousands of movies'
+          placeholder="Search through thousands of movies"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
     </div>

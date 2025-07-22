@@ -4,7 +4,7 @@ import Spinner from './components/Spinner';
 import MovieCard from './components/MovieCard';
 import type { Movie } from './types/movie';
 import { useDebounce } from 'react-use';
-import { updateSearchCount } from './appwrite';
+import { updateSearchCount, getTrendingMovies } from './appwrite';
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const API_KEY = import.meta.env.VITE_MOVIE_API_KEY;
 
@@ -19,11 +19,13 @@ const API_OPTIONS = {
 const App = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [trendingMovies, setTrendingMovies] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
 
   // Debounce the search term to prevent too many requests to the API when the user is typing
+  // searchTerm state is not updated immediately, but rather after 1 second of no typing
   useDebounce(() => {
     setDebouncedSearchTerm(searchTerm);
   }, 1000, [searchTerm]);
@@ -39,12 +41,12 @@ const App = () => {
     try {
       //fetch movies from the API using the query and the API_BASE_URL
       const endpoint = query 
-      ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}` 
-      : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`  // TMDB API endpoint for searching movies
+      : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`; // TMDB API endpoint for discovering movies
 
       const response = await fetch(endpoint, {
         ...API_OPTIONS,
-        signal: controller.signal,
+        signal: controller.signal, // Abort the request if it takes too long, using the AbortController
       });
 
       //if the response is not ok, throw an error and handle the different types of errors
@@ -64,13 +66,18 @@ const App = () => {
       const data = await response.json();
 
       //if the response has results, set the movies and update the search count
+      // TMDB API returns results in the data.results array
       if (data.results) {
         setMovies(data.results);
-        updateSearchCount(); // ← Temporarily added here for testing
+        
+        // If the search term is not empty and there are movies that match the search term, update the search count
+        if (query && data.results.length > 0) {
+          await updateSearchCount(query, data.results[0]);
+        }
       } else {
         setErrorMessage('No movies found');
-        setMovies([]);
-        updateSearchCount();
+        setMovies(data.results || []);
+        await updateSearchCount('', { id: 0 }); // Update the search count with an empty search term and a movie with id 0
       }
     } catch (error) {
       console.error('Error fetching movies:', error);
@@ -92,8 +99,18 @@ const App = () => {
       setMovies([]); 
     } finally {
       //clear the timeout and set the loading to false
+      // required to prevent memory leaks from the AbortController
       clearTimeout(timeoutId);
       setLoading(false);
+    }
+  };
+
+  const fetchTrendingMovies = async () => {
+    try {
+      const trendingMovies = await getTrendingMovies();
+      setTrendingMovies(trendingMovies);
+    } catch (error) {
+      console.error('Error fetching trending movies:', error);
     }
   };
 
@@ -101,6 +118,10 @@ const App = () => {
   useEffect(() => {
     fetchMovies(debouncedSearchTerm);
   }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    fetchTrendingMovies();
+  }, []);
 
   return (
     <main>

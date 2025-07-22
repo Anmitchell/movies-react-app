@@ -5,6 +5,7 @@ interface SearchProps {
   setSearchTerm: (searchTerm: string) => void;
 }
 
+// Search term state is passed as a prop to the Search component from the parent component (App.tsx)
 const Search = ({ searchTerm, setSearchTerm }: SearchProps) => {
   return (
     <div className="search">

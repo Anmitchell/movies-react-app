@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Search from './components/Search';
 import Spinner from './components/Spinner';
 import MovieCard from './components/MovieCard';
-import type { Movie } from './types/movie';
+import type { Movie, TrendingMovie } from './types/movie';
 import { useDebounce } from 'react-use';
 import { updateSearchCount, getTrendingMovies } from './appwrite';
 const API_BASE_URL = 'https://api.themoviedb.org/3';
@@ -17,12 +17,19 @@ const API_OPTIONS = {
 };
 
 const App = () => {
+  // search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  // movies
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [trendingMovies, setTrendingMovies] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
+
+  // trending movies
+  const [trendingMovies, setTrendingMovies] = useState<TrendingMovie[]>([]);
+  const [trendingMoviesErrorMessage, setTrendingMoviesErrorMessage] = useState<string>('');
+  const [trendingMoviesLoading, setTrendingMoviesLoading] = useState<boolean>(false);
 
   // Debounce the search term to prevent too many requests to the API when the user is typing
   // searchTerm state is not updated immediately, but rather after 1 second of no typing
@@ -30,6 +37,7 @@ const App = () => {
     setDebouncedSearchTerm(searchTerm);
   }, 1000, [searchTerm]);
 
+  //fetch movies from the API
   const fetchMovies = async (query: string = ''): Promise<void> => {
     setLoading(true);
     setErrorMessage('');
@@ -77,7 +85,7 @@ const App = () => {
       } else {
         setErrorMessage('No movies found');
         setMovies(data.results || []);
-        await updateSearchCount('', { id: 0 }); // Update the search count with an empty search term and a movie with id 0
+        await updateSearchCount('', { id: 0, title: 'No Movie' }); // Update the search count with an empty search term and a movie with id 0
       }
     } catch (error) {
       console.error('Error fetching movies:', error);
@@ -105,12 +113,20 @@ const App = () => {
     }
   };
 
+  //fetch trending movies from the database
   const fetchTrendingMovies = async () => {
     try {
+      setTrendingMoviesLoading(true);
+      setTrendingMoviesErrorMessage('');
+
       const trendingMovies = await getTrendingMovies();
       setTrendingMovies(trendingMovies);
+
+      setTrendingMoviesLoading(false);
     } catch (error) {
       console.error('Error fetching trending movies:', error);
+      setTrendingMoviesErrorMessage('Failed to fetch trending movies. Please try again later.');
+      setTrendingMovies([]);
     }
   };
 
@@ -135,6 +151,29 @@ const App = () => {
           </h1>
         </header>
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+        {trendingMovies.length > 0 && (
+          <section className="trending">
+            <h2 className="">Trending Movies</h2>
+            {trendingMoviesLoading ? (
+              <Spinner />
+            ) : trendingMoviesErrorMessage ? (
+              <p className="text-red-500">{trendingMoviesErrorMessage}</p>
+            ) : (
+            <ul>
+              {trendingMovies.map((movie, index) => (
+                <li key={movie.$id}>
+                  <p>{index + 1}</p>
+                  <img src={movie.poster_url} alt={movie.title} />
+                  <li>
+                    <p>{movie.title}</p>
+                  </li>
+                </li>
+              ))}
+            </ul>
+            )}
+          </section>
+        )}
 
         {/* Movies */}
         <section className="all-movies">

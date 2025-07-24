@@ -10,10 +10,6 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 9090
-      },
-      env_production: {
-        NODE_ENV: 'production',
-        PORT: 9090
       }
     }
   ]

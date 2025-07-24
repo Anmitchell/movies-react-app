@@ -193,6 +193,52 @@ export const getTrendingMovies = async () => {
 };
 ```
 
+## 🚀 Deployment Options
+
+### Option 1: Netlify (Recommended)
+
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Build the app
+npm run build
+
+# Deploy to Netlify
+netlify deploy --prod --dir=dist
+```
+
+### Option 2: Vercel
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy to Vercel
+vercel --prod
+```
+
+### Option 3: GitHub Pages
+
+```bash
+# Build the app
+npm run build
+
+# Push to GitHub with GitHub Pages enabled
+```
+
+### Option 4: Static Hosting
+
+```bash
+# Build the app
+npm run build
+
+# Upload dist/ folder to:
+# - AWS S3
+# - Digital Ocean Spaces
+# - Any static hosting service
+```
+
 ## 🚀 Getting Started
 
 ### Prerequisites

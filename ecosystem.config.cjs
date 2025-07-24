@@ -2,14 +2,14 @@ module.exports = {
   apps: [
     {
       name: 'movie-app',
-      script: './server/dist/server.js',
+      script: 'server.js',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 9090
+        PORT: 3000
       }
     }
   ]

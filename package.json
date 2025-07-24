@@ -8,16 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server:dev": "cd server && npm run dev",
-    "server:build": "cd server && npm run build",
-    "server:start": "cd server && npm start",
-    "deploy": "npm run build && cd server && npm run build && npm start",
-    "deploy:prod": "npm run build && cd server && npm run build"
+    "start": "node server.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "appwrite": "^18.1.1",
-    "dotenv": "^17.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-use": "^17.6.0",

@@ -1,40 +1,40 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
 
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 9090;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Path to your frontend build directory (e.g., Vite or React build)
+const distPath = path.join(__dirname, '../../dist');
 
-// Serve static files from the React app build
-const publicPath = path.join(__dirname, '../public');
-app.use(express.static(publicPath));
+// Register middleware:
+// - CORS for cross-origin requests
+// - JSON body parsing for incoming requests
+// - Serve static files from the dist directory
+app.use(cors(), express.json(), express.static(distPath));
 
-// API Routes
-app.get('/api/health', (req, res) => {
+// Health check endpoint for monitoring or testing
+app.get('/api/health', (_: Request, res: Response) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
-// Serve React app for all other routes (SPA routing)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+// Catch-all route to serve your SPA (index.html for React Router or similar)
+app.use((_: Request, res: Response) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response) => {
+// Global error handler for uncaught errors in routes or middleware
+app.use((err: Error, _: Request, res: Response) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// Start the server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 React app will be served from: http://localhost:${PORT}`);
-  console.log(`📁 Static files served from: ${publicPath}`);
-}); 
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});

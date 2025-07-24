@@ -12,7 +12,10 @@ const PORT = process.env.PORT || 9090;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve static files from the React app build
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath));
 
 // API Routes
 app.get('/api/health', (req, res) => {
@@ -20,8 +23,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve React app for all other routes (SPA routing)
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // Error handling middleware
@@ -33,4 +36,5 @@ app.use((err: Error, req: express.Request, res: express.Response) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 React app will be served from: http://localhost:${PORT}`);
+  console.log(`📁 Static files served from: ${publicPath}`);
 }); 

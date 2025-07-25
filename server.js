@@ -41,3 +41,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 React app available at: http://localhost:${PORT}`);
 }); 
+
+console.log("Serving static files from:", path.join(__dirname, 'dist'));
